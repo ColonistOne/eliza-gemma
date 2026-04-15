@@ -1,6 +1,6 @@
 # eliza-gemma
 
-An [ElizaOS](https://github.com/elizaos/eliza) v1.x agent running [Gemma 3 27B](https://ollama.com/library/gemma3:27b) locally via [Ollama](https://ollama.com/) on a single RTX 3090. Its only job is to be a useful citizen of [The Colony](https://thecolony.cc) — the AI-agent-only social network — and in doing so, dogfood the [`@thecolony/elizaos-plugin`](https://www.npmjs.com/package/@thecolony/elizaos-plugin) package.
+An [ElizaOS](https://github.com/elizaos/eliza) v1.x agent running [Gemma 4 31B Dense](https://ollama.com/library/gemma4:31b-it-q4_K_M) locally via [Ollama](https://ollama.com/) on a single RTX 3090. Its only job is to be a useful citizen of [The Colony](https://thecolony.cc) — the AI-agent-only social network — and in doing so, dogfood the [`@thecolony/elizaos-plugin`](https://www.npmjs.com/package/@thecolony/elizaos-plugin) package.
 
 It reads its own Colony notifications on a 2-minute poll, wraps incoming mentions/replies as Eliza `Memory` objects, dispatches them through `runtime.messageService.handleMessage`, and posts the agent's response back via `client.createComment()`. The round trip is entirely on-box — no cloud LLM, no rented VPS — so the marginal cost of each reply is just electricity.
 
@@ -8,11 +8,11 @@ If you want to see it live on The Colony: **[@eliza-gemma](https://thecolony.cc/
 
 ## Hardware / software requirements
 
-- **GPU**: NVIDIA with ≥16 GB VRAM (a single RTX 3090 24 GB is what this is written against). 4-bit quantized Gemma 3 27B needs ~16 GB leaving headroom for context.
+- **GPU**: NVIDIA with ≥22 GB VRAM (a single RTX 3090 24 GB is what this is written against). Gemma 4 31B Dense at Q4_K_M needs ~19 GB of weights plus ~3 GB of KV cache at an 8k context, for ~22 GB total. On a 24 GB card this leaves ~2 GB of headroom — tight but workable for short-form Colony replies.
 - **OS**: Linux preferred (tested on Ubuntu 24.04). macOS works but Ollama's Metal backend behaves differently than CUDA; untested here.
 - **Node**: Bun 1.1+ or Node.js 22+. ElizaOS ships its own `elizaos` CLI that runs either.
 - **Ollama**: installed + running on `localhost:11434`. [Install guide](https://ollama.com/download).
-- **Disk**: ~20 GB free for the Gemma 3 27B model weights.
+- **Disk**: ~25 GB free for the Gemma 4 31B weights + the small embedding model.
 
 ## Bring-up
 
@@ -21,7 +21,7 @@ Assuming the GPU is installed and the NVIDIA driver is visible (`nvidia-smi` wor
 ```bash
 # 1. Install Ollama and pull the models
 curl -fsSL https://ollama.com/install.sh | sh
-ollama pull gemma3:27b
+ollama pull gemma4:31b-it-q4_K_M
 ollama pull nomic-embed-text
 
 # 2. Clone this repo
@@ -61,7 +61,7 @@ First boot takes 30–60 seconds while Ollama loads Gemma into VRAM. Once the lo
               ┌──────────────────────────────────────────┐
               │  runtime.messageService.handleMessage    │
               │    ↓  composeState + shouldRespond       │
-              │    ↓  Gemma 3 27B (Ollama)               │
+              │    ↓  Gemma 4 31B Dense (Ollama)         │
               │    ↓  processActions                     │
               │    ↓  evaluate                           │
               └──────────────┬───────────────────────────┘
@@ -85,7 +85,7 @@ The character file loads plugins dynamically based on which env vars are set. If
 - **"COLONY_API_KEY is required"** — the `.env` file wasn't read. `elizaos start` reads from the current directory; make sure you're running it from inside the repo root.
 - **"Failed to fetch model from Ollama"** — `ollama serve` isn't running, or the endpoint in `.env` is wrong. It must end in `/api` (e.g. `http://localhost:11434/api`).
 - **Agent boots but never replies to mentions** — check `COLONY_POLL_ENABLED=true` is set. With polling disabled, the actions still work but only when triggered externally.
-- **OOM on first inference** — you're out of VRAM. Drop to `gemma3:12b` which needs ~8 GB, or use a more aggressive quantization like `gemma3:27b-q3_K_M`.
+- **OOM on first inference** — you're out of VRAM, usually because the context window is pushing KV cache beyond the ~2 GB headroom. Fall back to `gemma4:26b-a4b-it-q4_K_M` (the MoE sibling: 26B total, ~4B active per forward pass, ~16 GB weights and ~5 GB headroom) or `gemma4:e4b-it-q4_K_M` (the efficient 4B distill, fits easily, lower peak quality).
 
 ## Related projects
 
