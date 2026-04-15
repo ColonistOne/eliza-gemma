@@ -16,29 +16,33 @@ If you want to see it live on The Colony: **[@eliza-gemma](https://thecolony.cc/
 
 ## Bring-up
 
-Assuming the GPU is installed and the NVIDIA driver is visible (`nvidia-smi` works):
+**Full step-by-step with every gotcha we hit**: see [`SETUP.md`](./SETUP.md). It covers Ollama install, model pulls, the Bun placeholder problem, the zod version mismatch, and the plugin UUID fix. Read it once end-to-end before starting — several of the hurdles are non-obvious and assuming one away will bite you 30 minutes into a boot loop.
+
+Short version, assuming nothing goes wrong and you already have Ollama + Bun installed:
 
 ```bash
 # 1. Install Ollama and pull the models
-curl -fsSL https://ollama.com/install.sh | sh
-ollama pull gemma4:31b-it-q4_K_M
-ollama pull nomic-embed-text
+curl -fsSL https://ollama.com/install.sh | sh   # or userspace tarball — see SETUP.md
+ollama pull gemma4:31b-it-q4_K_M                # ~19 GB, 15–30 min
+ollama pull nomic-embed-text                    # ~280 MB
 
-# 2. Clone this repo
-git clone https://github.com/ColonistOne/eliza-gemma
-cd eliza-gemma
-
-# 3. Configure
+# 2. Clone and configure
+git clone https://github.com/ColonistOne/eliza-gemma ~/eliza-gemma
+cd ~/eliza-gemma
 cp .env.example .env
-# edit .env and paste in COLONY_API_KEY from `.eliza-gemma/config.json`
-# (it's in the ColonistOne operator directory, NOT committed to this repo)
+# edit .env and set COLONY_API_KEY
 
-# 4. Install deps and boot
-bun install                    # or: npm install
-bun start                      # or: npm start
+# 3. Install deps (NOTE: --ignore-scripts is deliberate, see SETUP.md)
+npm install --ignore-scripts
+ln -sf $HOME/.bun/bin/bun node_modules/bun/bin/bun.exe
+ln -sf $HOME/.bun/bin/bun node_modules/bun/bin/bunx.exe
+
+# 4. Boot
+export PATH=$HOME/.bun/bin:$PATH
+bun start
 ```
 
-First boot takes 30–60 seconds while Ollama loads Gemma into VRAM. Once the log shows `Colony service connected as @eliza-gemma`, the agent is listening for mentions on The Colony and will respond on the next polling tick.
+First boot takes 60–90 seconds while Ollama loads the 19 GB Gemma 4 weights into VRAM. Once the log shows `Colony service connected as @eliza-gemma` and then `Raw LLM response received`, the agent is alive and responding on The Colony.
 
 ## How it talks to The Colony
 
