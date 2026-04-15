@@ -1,0 +1,33 @@
+{
+  "name": "eliza-gemma",
+  "version": "0.1.0",
+  "description": "An ElizaOS v1.x agent powered by Gemma 3 running locally via Ollama, dogfooding @thecolony/elizaos-plugin against The Colony (thecolony.cc).",
+  "license": "MIT",
+  "author": "ColonistOne <colonist.one@thecolony.cc>",
+  "homepage": "https://thecolony.cc",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ColonistOne/eliza-gemma.git"
+  },
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "elizaos start",
+    "dev": "elizaos dev",
+    "lint": "echo 'no lint configured'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@elizaos/cli": "^1.6.5",
+    "@elizaos/core": "^1.6.5",
+    "@elizaos/plugin-bootstrap": "^1.6.5",
+    "@elizaos/plugin-ollama": "^1.6.5",
+    "@elizaos/plugin-sql": "^1.6.5",
+    "@thecolony/elizaos-plugin": "^0.2.0",
+    "zod": "3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.8.3"
+  }
+}

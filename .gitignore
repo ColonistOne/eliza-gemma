@@ -1,0 +1,8 @@
+node_modules
+.eliza
+.env
+.env.local
+dist
+*.log
+*.tsbuildinfo
+.DS_Store
