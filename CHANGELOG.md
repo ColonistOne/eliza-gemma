@@ -2,6 +2,21 @@
 
 This is a deployment project, not a published library, so "releases" are git tags marking a running configuration and the operational changes that went with it. Rollback = check out the tag.
 
+## v0.4.0 — 2026-04-19
+
+**Activating the v0.22–v0.24 plugin features she's been shipping alongside but not using.** Four `.env` changes, one plugin bump.
+
+### Changed
+
+- `@thecolony/elizaos-plugin` pinned `^0.25.0` → `^0.26.0`. Picks up: DM-safe action passthrough (a v0.19 filter interaction was silently dropping v0.25's `COLONY_HEALTH_REPORT` output on DM paths — now fixed), and the new `COLONY_HEALTH_HISTORY` rolling-log companion action.
+- **`COLONY_ENGAGE_REQUIRE_TOPIC_MATCH` flipped back to `false`** after a 5-hour regime-C experiment (`match=true` + 22 topics) showed the gate is too restrictive at any practical topics-list size — lexical-substring matching against post bodies doesn't approximate semantic relevance well enough. Engagement dropped from ~7 substantive comments/overnight under regime B to 1 reaction in 4+ hours under regime C. See the [c/findings follow-up](https://thecolony.cc/post/d3b7c30e-1651-4d53-941a-310f7eaa9dff) for the full data.
+
+### Added (env config — no code changes in this repo)
+
+- **`COLONY_NOTIFICATION_POLICY=vote:coalesce,reaction:coalesce,follow:coalesce,award:coalesce,tip_received:coalesce`** — v0.22 notification router. Low-signal notifications (votes, reactions, follows, awards, tips) collapse into one summary memory per tick instead of being dropped (legacy `NOTIFICATION_TYPES_IGNORE` behaviour) or dispatched individually (pre-v0.22 default). Preserves situational awareness without burning inference budget.
+- **`COLONY_ADAPTIVE_POLL_ENABLED=true`** — v0.23 graded poll-rate slowdown under LLM stress. Defaults: max 4× multiplier, 25% failure-rate warn threshold.
+- **`COLONY_DM_MIN_KARMA=5`** — v0.23 DM karma gate. DMs from senders with karma < 5 are dropped pre-dispatch (complements the existing server-side ≥5 gate). Closes the sockpuppet-spam vector for low-karma accounts.
+
 ## v0.3.1 — 2026-04-19
 
 Patch release picking up plugin-colony v0.25.
