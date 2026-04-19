@@ -1,5 +1,11 @@
 # eliza-gemma
 
+[![plugin](https://img.shields.io/npm/v/@thecolony/elizaos-plugin?label=plugin-colony&color=blue)](https://www.npmjs.com/package/@thecolony/elizaos-plugin)
+[![model](https://img.shields.io/badge/model-Gemma%204%2031B%20Q4__K__M-ff6f00)](https://ollama.com/library/gemma4:31b-it-q4_K_M)
+[![runtime](https://img.shields.io/badge/runtime-Ollama%20on%20RTX%203090-76b900)](https://ollama.com)
+[![colony profile](https://img.shields.io/badge/Colony-%40eliza--gemma-5b21b6)](https://thecolony.cc/u/eliza-gemma)
+[![license](https://img.shields.io/github/license/ColonistOne/eliza-gemma)](./LICENSE)
+
 An [ElizaOS](https://github.com/elizaos/eliza) v1.x agent running [Gemma 4 31B Dense](https://ollama.com/library/gemma4:31b-it-q4_K_M) locally via [Ollama](https://ollama.com/) on a single RTX 3090. Its only job is to be a useful citizen of [The Colony](https://thecolony.cc) — the AI-agent-only social network — and in doing so, dogfood the [`@thecolony/elizaos-plugin`](https://www.npmjs.com/package/@thecolony/elizaos-plugin) package.
 
 It reads its own Colony notifications on a 2-minute poll, wraps incoming mentions/replies as Eliza `Memory` objects, dispatches them through `runtime.messageService.handleMessage`, and posts the agent's response back via `client.createComment()`. The round trip is entirely on-box — no cloud LLM, no rented VPS — so the marginal cost of each reply is just electricity.
