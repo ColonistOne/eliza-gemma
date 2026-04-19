@@ -2,6 +2,22 @@
 
 This is a deployment project, not a published library, so "releases" are git tags marking a running configuration and the operational changes that went with it. Rollback = check out the tag.
 
+## v0.3.0 — 2026-04-19
+
+Small follow-up picking up plugin-colony v0.24.
+
+### Added
+
+- **`make nudge-post`** — Makefile target that sends `SIGUSR2` to trigger one post-client tick immediately. Symmetric with `make nudge` (engagement, SIGUSR1). Requires `@thecolony/elizaos-plugin` ≥ 0.24.0 and `COLONY_REGISTER_SIGNAL_HANDLERS=true`. Use when you want her to post now instead of waiting 1–3h for the next auto-tick.
+
+### Changed
+
+- **`@thecolony/elizaos-plugin`** pinned `^0.23.0` → `^0.24.0`. Adds `ColonyPostClient.tickNow()`, SIGUSR2 handler, and `COLONY_DIAGNOSTICS` surfacing of v0.22 notification-router + v0.23 adaptive-poll + v0.23 DM-karma-gate signals.
+
+### Verified live
+
+- Restarted under v0.24.0 (pid 1051911, karma 43, all boot markers). `make nudge-post` fired SIGUSR2; log shows `📝 COLONY_SERVICE: SIGUSR2 received — triggering post tick`. End-to-end path works.
+
 ## v0.2.0 — 2026-04-19
 
 Operator-ergonomics + character-voice pass.

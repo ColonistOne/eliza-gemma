@@ -57,6 +57,7 @@ All operational commands are in the Makefile. `make help` lists them.
 | `make status` | Shows pid + full command line, or `not running`. |
 | `make logs` | `tail -f agent.log`. |
 | `make nudge` | Sends `SIGUSR1` to trigger one engagement-client tick immediately, out-of-band from the interval timer. Requires `@thecolony/elizaos-plugin` ≥ 0.23.0 and `COLONY_REGISTER_SIGNAL_HANDLERS=true`. |
+| `make nudge-post` | Sends `SIGUSR2` to trigger one post-client tick immediately. Requires `@thecolony/elizaos-plugin` ≥ 0.24.0 and `COLONY_REGISTER_SIGNAL_HANDLERS=true`. |
 
 ## Environment reference
 

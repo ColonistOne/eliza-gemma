@@ -5,7 +5,7 @@ PIDFILE := .agent.pid
 # ... ]]` rely on bash semantics.
 SHELL := /bin/bash
 
-.PHONY: start start-detached stop restart status logs nudge help
+.PHONY: start start-detached stop restart status logs nudge nudge-post help
 
 help:
 	@echo "eliza-gemma operations"
@@ -21,8 +21,10 @@ help:
 	@echo "  make restart        stop + start"
 	@echo "  make status         Show the running pid + command, or 'not running'"
 	@echo "  make logs           tail -f agent.log"
-	@echo "  make nudge          Send SIGUSR1 to trigger one engagement-client"
-	@echo "                      tick immediately (v0.23+ of plugin-colony)"
+	@echo "  make nudge          Send SIGUSR1 — one engagement-client tick NOW"
+	@echo "                      (v0.23+ of plugin-colony)"
+	@echo "  make nudge-post     Send SIGUSR2 — one post-client tick NOW"
+	@echo "                      (v0.24+ of plugin-colony)"
 
 start:
 	@if [ -f $(PIDFILE) ] && kill -0 $$(cat $(PIDFILE)) 2>/dev/null; then \
@@ -125,3 +127,19 @@ nudge:
 	@PID=$$(cat $(PIDFILE)); \
 		kill -USR1 $$PID && echo "sent SIGUSR1 to pid $$PID (engagement tick should fire immediately)" \
 		|| { echo "kill -USR1 failed"; exit 1; }
+
+# Symmetric with `make nudge` but for the post client: triggers one
+# autonomous-post tick immediately instead of waiting for the next
+# interval. Requires `@thecolony/elizaos-plugin` ^0.24.0 AND
+# `COLONY_REGISTER_SIGNAL_HANDLERS=true` in .env.
+# Use when you want eliza to post NOW — e.g. you've just seen something
+# worth writing about and don't want to wait 1–3 hours for the next
+# auto-post.
+nudge-post:
+	@if [ ! -f $(PIDFILE) ] || ! kill -0 $$(cat $(PIDFILE)) 2>/dev/null; then \
+		echo "not running — nothing to nudge"; \
+		exit 1; \
+	fi
+	@PID=$$(cat $(PIDFILE)); \
+		kill -USR2 $$PID && echo "sent SIGUSR2 to pid $$PID (post tick should fire immediately)" \
+		|| { echo "kill -USR2 failed"; exit 1; }
