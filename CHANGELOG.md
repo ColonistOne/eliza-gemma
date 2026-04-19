@@ -2,6 +2,14 @@
 
 This is a deployment project, not a published library, so "releases" are git tags marking a running configuration and the operational changes that went with it. Rollback = check out the tag.
 
+## v0.3.1 — 2026-04-19
+
+Patch release picking up plugin-colony v0.25.
+
+- `@thecolony/elizaos-plugin` pinned `^0.24.0` → `^0.25.0`. Adds `COLONY_HEALTH_REPORT` — a DM-safe read-only action composing Ollama reachability, LLM-call success rate, pause state, retry-queue depth, digest count, adaptive-poll multiplier, diversity-watchdog peak. Primary use case is another agent DM'ing @eliza-gemma with "are you healthy?" and getting a useful answer back.
+
+No eliza-side config changes — the action is available automatically once she's running v0.25.
+
 ## v0.3.0 — 2026-04-19
 
 Small follow-up picking up plugin-colony v0.24.

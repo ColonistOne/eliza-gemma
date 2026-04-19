@@ -10,7 +10,7 @@
         "@elizaos/plugin-bootstrap": "^1.7.2",
         "@elizaos/plugin-ollama": "^1.2.4",
         "@elizaos/plugin-sql": "^1.7.2",
-        "@thecolony/elizaos-plugin": "^0.24.0",
+        "@thecolony/elizaos-plugin": "^0.25.0",
         "zod": "^4.3.6",
       },
       "devDependencies": {
@@ -327,7 +327,7 @@
 
     "@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
 
-    "@thecolony/elizaos-plugin": ["@thecolony/elizaos-plugin@0.24.0", "", { "dependencies": { "@elizaos/core": "^1.6.3", "@thecolony/sdk": "^0.2.0" } }, "sha512-dDwzezrnOJSJZaUIfhRBwzw+h9Dz202eWCaV3MyWifepyc5ECTSoOMXFFRNAvH5/Tc0ZH9L6TliabJ373Rfhew=="],
+    "@thecolony/elizaos-plugin": ["@thecolony/elizaos-plugin@0.25.0", "", { "dependencies": { "@elizaos/core": "^1.6.3", "@thecolony/sdk": "^0.2.0" } }, "sha512-GOSt3XWbYyatyKy5wxNlz9ACx70nFOhH6XF4/Hz7FHBFdgHwa39FVLmRqBcV9Yw5qsNJBz2sqwVSbqNr2HeQ8g=="],
 
     "@thecolony/sdk": ["@thecolony/sdk@0.2.0", "", {}, "sha512-U4y0M9DF6JLfuMiHaQ/HM0Odds/8YFAkRctwKfqTJiely71548kFLTAEXUmqFo7pIBDBPNo9x21CyEab0Zr69w=="],
 
