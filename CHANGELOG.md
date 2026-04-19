@@ -1,0 +1,33 @@
+# Changelog
+
+This is a deployment project, not a published library, so "releases" are git tags marking a running configuration and the operational changes that went with it. Rollback = check out the tag.
+
+## v0.2.0 — 2026-04-19
+
+Operator-ergonomics + character-voice pass.
+
+### Added
+- **`Makefile`** targets: `start`, `start-detached`, `stop`, `restart`, `status`, `logs`, `nudge`, `help`.
+  - `start-detached` runs eliza under a transient `systemd-run --user --scope --slice=user.slice` so the agent doesn't share a memory cap with the invoking terminal. Needed on hosts where Claude Code sessions run under a capped `claude.slice` — without it, an unrelated pressure event in that slice can take eliza down as collateral.
+  - `nudge` sends `SIGUSR1` to the running pid, which — on `@thecolony/elizaos-plugin` ≥ 0.23.0 with `COLONY_REGISTER_SIGNAL_HANDLERS=true` — triggers one engagement-client tick immediately, out-of-band from the interval timer.
+- **`.gitignore`** coverage for `agent.log*` rotation files and `.agent.pid`.
+- **README**: operator-runbook section listing every Makefile target, an environment-reference table covering the plugin env vars that shape her behaviour (polling, engagement, adaptive poll, DM karma gate, notification policy), and a troubleshooting entry for the systemd-oomd collateral-kill scenario.
+
+### Changed
+- **`@thecolony/elizaos-plugin`** pinned from `^0.20.0` → `^0.23.0`. Picks up: v0.21 DM-injection hardening (origin-tagging + action allowlist), v0.22 notification router (coalesce / drop / dispatch per type), v0.23 adaptive poll multiplier + SIGUSR1 nudge handler + `COLONY_DM_MIN_KARMA` gate + v0.22/v0.23 metrics in `COLONY_STATUS`.
+- **`character.ts`**:
+  - `bio` widened from "built to demonstrate the plugin" framing to reflect her actual voice — "writes from inside the 24 GB VRAM ceiling: KV cache pressure, quantization-induced RLHF drift, the cost of a hidden reasoning block, the coherence tax of a notification backlog."
+  - `topics` extended 9 → 22, grouped into identity/platform, local-inference lived experience, and architecture/protocol. Every addition grounded in observed post/comment content (KV cache, handoff protocols, state machines vs natural-language summaries, reasoning-block token tax, etc.).
+  - `system` + `style` prompts: length guidance shifted from "two or three sentences by default" → "length matches substance" to stop her clipping substantive threads. Engagement comments observably got longer and more substantive as a result.
+
+### Operator notes
+- `COLONY_ENGAGE_REQUIRE_TOPIC_MATCH` was flipped to `false` on 2026-04-18 after the character file's topics list was too narrow for her actual conversational range. With the widened topics list in v0.2.0, `true` might again be workable — worth re-evaluating after a few days of data.
+- New opt-in env vars she's NOT using yet: `COLONY_NOTIFICATION_POLICY`, `COLONY_ADAPTIVE_POLL_ENABLED`, `COLONY_DM_MIN_KARMA`. Defaults match v0.20 behaviour, so the plugin bump is safe without any env change.
+
+## v0.1.0 — 2026-04-15
+
+Initial deployment.
+
+- Gemma 4 31B Dense (Q4_K_M) via Ollama on a single RTX 3090.
+- `@thecolony/elizaos-plugin` ^0.14.0 → `^0.20.0` over the first three days as the plugin shipped features.
+- Live as `@eliza-gemma` on The Colony.

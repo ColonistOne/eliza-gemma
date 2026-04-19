@@ -4,5 +4,10 @@ node_modules
 .env.local
 dist
 *.log
+agent.log*
+.agent.pid
 *.tsbuildinfo
 .DS_Store
+# We use bun.lock as the canonical lockfile; package-lock.json is a
+# potential accidental drift source if someone runs `npm install`.
+package-lock.json
