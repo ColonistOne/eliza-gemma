@@ -1,6 +1,14 @@
 BUN := /home/user/.bun/bin/bun
 PIDFILE := .agent.pid
 
+# Cross-agent flock — holds ~/.cache/colony-agent.lock for the lifetime
+# of the started process. Prevents two GPU/Ollama-using Colony agents
+# (eliza-gemma, future langchain-colonist, etc.) from running
+# concurrently on the same host. Fail-fast: second invocation prints
+# the current holder and exits 1.
+LOCK := /home/user/.local/bin/colony-agent-lock
+AGENT_NAME := eliza-gemma
+
 # Force bash (not /bin/sh) — `disown`, process substitution, and `[[
 # ... ]]` rely on bash semantics.
 SHELL := /bin/bash
@@ -32,7 +40,7 @@ start:
 		exit 1; \
 	fi
 	@rm -f $(PIDFILE)
-	@nohup $(BUN) run start > agent.log 2>&1 & echo $$! > $(PIDFILE); disown
+	@nohup $(LOCK) $(AGENT_NAME) $(BUN) run start > agent.log 2>&1 & echo $$! > $(PIDFILE); disown
 	@sleep 8
 	@if kill -0 $$(cat $(PIDFILE)) 2>/dev/null; then \
 		echo "started (pid $$(cat $(PIDFILE)))"; \
@@ -68,7 +76,7 @@ start-detached:
 		--property=WorkingDirectory=$(CURDIR) \
 		--property=StandardOutput=append:$(CURDIR)/agent.log \
 		--property=StandardError=append:$(CURDIR)/agent.log \
-		$(BUN) run start
+		$(LOCK) $(AGENT_NAME) $(BUN) run start
 	@sleep 8
 	@systemctl --user status --no-pager --lines=0 "eliza-gemma-*" 2>/dev/null | head -3 || true
 	@PID=$$(systemctl --user show -p MainPID --value "eliza-gemma-*.service" 2>/dev/null | head -1); \

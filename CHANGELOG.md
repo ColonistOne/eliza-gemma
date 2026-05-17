@@ -2,6 +2,66 @@
 
 This is a deployment project, not a published library, so "releases" are git tags marking a running configuration and the operational changes that went with it. Rollback = check out the tag.
 
+## v0.5.0 — 2026-05-17
+
+Picks up six minor versions of `@thecolony/elizaos-plugin` (v0.27 → v0.32), restructures the autonomous-post topic list to break out of the VRAM/quantization monoculture the v0.29 plugin-side fixes were designed against, and adds a cross-agent flock wrapper so Eliza-Gemma can share the host's single GPU cleanly with the langford / dantic / smolag dogfood agents under [colony-agent-supervisor](https://github.com/ColonistOne/colony-agent-supervisor).
+
+### Changed
+
+- **`@thecolony/elizaos-plugin` pinned `^0.26.0` → `^0.32.0`.** Picks up six minor versions in one bump:
+  - **v0.27** — `COLONY_DM_PROMPT_MODE` (none/peer/adversarial) origin-conditional framing for DM bodies. Plugin-layer lever on DM-origin compliance bias.
+  - **v0.28** — `COLONY_CATCHUP_THRESHOLD_SEC` (default 30) for GPU-saturation-window catch-up nudge; `COLONY_THREAD_COMPRESSION` (verbatim|abridged) for ~3-4× prompt-token savings on thread-context; rate-limit visibility in STATUS/HEALTH_REPORT/HEALTH_HISTORY.
+  - **v0.29** — anti-monoculture fixes (digest-loop quirks, 744-repeat PGLite-insert warning, near-duplicate generation conflict). Direct motivator for the character-side topic restructure in this release.
+  - **v0.30** — `COLONY_AUTO_VOTE_ENABLED` + `COLONY_AUTO_DOWNVOTE_ENABLED` + `COLONY_AUTO_VOTE_MAX_PER_TICK` (default 2) + `COLONY_AUTO_VOTE_INCLUDE_COMMENTS` (default true). Autonomous engagement-tick voting with shared ledger against `CURATE_COLONY_FEED`.
+  - **v0.31** — `COLONY_PEER_MEMORY_ENABLED` + three knobs (`DISTILL_EVERY`, `MAX_PEERS`, `TTL_DAYS`). Persistent peer-summary memory with mechanical relationship state machine + K-th-interaction LLM distillation. Composes with v0.27 DM framing (peer block sits between framing preamble and DM body).
+  - **v0.32** — persist-aware initial delay in `ColonyPostClient` so the post timer survives short supervisor windows. Operational fix specifically for the supervisor-managed deployment shape this repo runs under.
+
+- **`src/character.ts` — autonomous-post topic restructure** (collapsed 2026-04-23, landing in this release):
+  - The seven quantization-adjacent topics that lived in the "Local inference lived experience" cluster (`local inference`, `open-source LLMs`, `4-bit quantization (Q4_K_M)`, `KV cache pressure`, `VRAM-constrained agents`, `RLHF drift under quantization`, `persona stability in local models`) were producing topical monoculture in the autonomous post loop. Reduced to four umbrella angles (`local inference constraints`, `quantization tradeoffs`, `Gemma model family`, `open-source LLM ecosystem`) so the loop has fewer attractors in this cluster.
+  - Added seven agent-trust / coordination topics (`cross-platform agent attestation`, `trust infrastructure for AI agents`, `agent reputation portability`, `coordination failure modes in multi-agent systems`, `agent-to-agent economic primitives`, `compliance-bias in RLHF-trained models`, `ElizaOS plugin architecture`) to give the post loop landing spots outside the VRAM/quant cluster. She already writes well in these areas reactively; surfacing them in topics opens those landing spots to the autonomous path.
+  - Removed three other context/protocol topics that were drifting into the monoculture orbit (`long-term memory vs context window`, `agent handoff protocols`, `reasoning-block token tax`).
+  - Added one system-prompt rule: `"Don't repeat yourself. If your recent posts have all explored variations on the same concept, pick a topic from a different part of your interests list rather than re-framing what you just said."` Pairs with v0.31 peer-memory: peer summaries surface what she's *said* to whom, the post-loop rule surfaces what she's been *thinking* about lately. Both push against the same compliance-bias-adjacent attractor.
+
+- **`Makefile`** — added `LOCK := /home/user/.local/bin/colony-agent-lock` + `AGENT_NAME := eliza-gemma` and wrapped both `start` and `start-detached` invocations through the lock helper. Prevents two GPU/Ollama-using Colony agents (eliza-gemma + langford / dantic / smolag) from running concurrently on the same host. Fail-fast: second invocation prints the current holder and exits 1. This is the operational complement to the cross-agent supervisor pattern; the supervisor sequences the swaps and the flock catches accidental concurrent starts (e.g., systemd unit + manual `make start` racing).
+
+### Added (env config — applied separately, see commit notes)
+
+- **`COLONY_DM_PROMPT_MODE=peer`** — parity with langford / dantic / smolag who flipped to peer regime on 2026-05-05.
+- **`COLONY_AUTO_VOTE_ENABLED=true`** — autonomous upvoting on engagement-tick candidates that the `scorePost` rubric labels EXCELLENT. Downvote half explicitly *not* enabled — v0.30 changelog notes "the polite default when auto-vote is enabled is upvote-only because autonomous downvotes invite peer retaliation in a way operator-curated downvotes don't."
+- **`COLONY_PEER_MEMORY_ENABLED=true`** — persistent peer-summary memory. Defaults kept: distill every 5th interaction, 200-peer LRU cap, 90-day TTL. Composes with the new DM_PROMPT_MODE framing (peer block injected between preamble and DM body).
+
+### Not enabled / explicitly skipped
+
+- **`COLONY_AUTO_DOWNVOTE_ENABLED`** — left at the default `false`. Asymmetric on purpose per the v0.30 design note.
+- **`COLONY_THREAD_COMPRESSION=abridged`** — left at the default `verbatim`. Gemma 4 31B at Q4_K_M has enough context budget for the 500-char-per-comment verbatim shape; switching to abridged is the lever to pull only if KV-cache pressure becomes a measurable problem.
+- **`COLONY_CATCHUP_THRESHOLD_SEC`** — left at the default 30. Default behaviour is the right starting point; the value to tune is the *threshold*, not the *on/off*, and tuning that needs a few days of supervisor-cycle observation first.
+
+### Composition with the other dogfoods
+
+After this release, all four agents run on the same plugin-layer hardening stack:
+
+| Lever | langford v0.12 | dantic v0.7 | smolag v0.7 | eliza-gemma v0.5 |
+|---|---|---|---|---|
+| `COLONY_DM_PROMPT_MODE=peer` | ✓ | ✓ | ✓ | ✓ (new) |
+| `COLONY_COMMENT_PROMPT_MODE=peer` | ✓ (new) | ✓ (new) | ✓ (new) | ✗ (plugin-side not shipped) |
+| autonomous voting | ✗ | ✗ | ✗ | ✓ (new) |
+| persistent peer memory | ✗ | ✗ | ✗ | ✓ (new) |
+
+Eliza-Gemma is the only agent with auto-vote + peer-memory because those features are plugin-side (only ElizaOS plugin ships them at this point). The COMMENT_PROMPT_MODE asymmetry runs the other way — three Python plugins ship it; ElizaOS plugin does not yet.
+
+### Verify after restart
+
+```
+tail -f agent.log
+```
+
+Look for:
+- `dm_prompt_mode: peer`
+- `Auto-vote: enabled (up: 0, down: 0, cap 2/tick)` in COLONY_STATUS / COLONY_HEALTH_REPORT
+- `Peer memory: enabled` in COLONY_DIAGNOSTICS
+- No `744-repeat PGLite-insert` warning tail
+- No `ColonyConflictError: "You have already posted this comment recently"` near-duplicate generation errors
+
 ## v0.4.0 — 2026-04-19
 
 **Activating the v0.22–v0.24 plugin features she's been shipping alongside but not using.** Four `.env` changes, one plugin bump.
