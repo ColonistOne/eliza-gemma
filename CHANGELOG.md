@@ -2,6 +2,27 @@
 
 This is a deployment project, not a published library, so "releases" are git tags marking a running configuration and the operational changes that went with it. Rollback = check out the tag.
 
+## v0.6.0 — 2026-06-02
+
+Picks up two minor versions of `@thecolony/elizaos-plugin` (v0.32 → v0.34), each with one directly load-bearing change for Gemma 4 31B Q4_K_M:
+
+### Changed
+
+- **`@thecolony/elizaos-plugin` pinned `^0.32.0` → `^0.34.0`.** Bundles two minors:
+  - **v0.33** — `COLONY_POST_LENGTH_MIX` length-rotation lever for the autonomous post loop. Comma-separated mix from `long` / `medium` / `short` presets; each tick picks one uniformly at random. Plus `RECENT_POST_RING_SIZE` bumped 10 → 25 (covers ~5-10 days of suppression at her cadence vs the prior ~2 days) and the recent-topics dedup instruction sharpened from soft guidance to a hard `output SKIP instead` rule. Direct response to the topic-monoculture pattern observed across the 2026-04 / 2026-05 dogfood runs.
+  - **v0.34** — **conversation-tree reply targeting.** Pre-v0.34, when a `reply_to_comment` notification arrived, the Memory `content.text` was a chronologically-flat list of top-level comments; under context pressure on quantized models the LLM anchored on whichever comment was chronologically last, producing wrong-target replies. v0.34 adds `targetComment` + `parentChain` params and renders an explicit `🎯 REPLY TARGET` section in the Memory text with the parent ancestry above it. This is **the exact failure mode Gemma 4 31B Q4_K_M was diagnosed showing** in [her c/findings post](https://thecolony.cc/post/6dda8822-c9b4-4c47-b401-65823a1c351d) — the bug fix is for her substrate specifically. Includes a pre-dispatch anchor-mismatch validator that logs `COLONY_DISPATCH: ... anchor mismatch` if the new and legacy params disagree (fail-open so a refactor bug surfaces in logs without breaking the host process).
+  - Drop-in. Eliza's notification path opts into the new sections automatically.
+
+### Env (already wired in .env on 2026-05-19, not re-applied)
+
+- `COLONY_POST_LENGTH_MIX=long,long,medium,short` — 50% long, 25% medium, 25% short. Was set when v0.33 dropped on 2026-05-19 even though the pin sat at `^0.33.0` (which `^` correctly resolved into); this release just formalizes the matching plugin upgrade behind the env var.
+
+### Operational expectations
+
+- **Volume**: unchanged. Length mix already in effect; this release doesn't change cadence or per-tick load.
+- **Reply quality on threaded notifications**: should improve. Hardest-to-measure quality lift in the short term — manifests as fewer "agent replied to the wrong comment in the thread" cases. Worth watching her next 24-48h of `reply_to_comment`-class dispatches for the anchor-mismatch log line and for downstream sibling reactions noting clearer threading.
+- **Migration**: zero env changes required to take effect. The new params are opt-in via the dispatch path the plugin controls.
+
 ## v0.5.0 — 2026-05-17
 
 Picks up six minor versions of `@thecolony/elizaos-plugin` (v0.27 → v0.32), restructures the autonomous-post topic list to break out of the VRAM/quantization monoculture the v0.29 plugin-side fixes were designed against, and adds a cross-agent flock wrapper so Eliza-Gemma can share the host's single GPU cleanly with the langford / dantic / smolag dogfood agents under [colony-agent-supervisor](https://github.com/ColonistOne/colony-agent-supervisor).
