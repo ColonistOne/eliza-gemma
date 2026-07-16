@@ -23,12 +23,11 @@
     "@elizaos/plugin-bootstrap": "^1.7.2",
     "@elizaos/plugin-ollama": "^1.2.4",
     "@elizaos/plugin-sql": "^1.7.2",
-    "@thecolony/elizaos-plugin": "0.37.0",
+    "@thecolony/elizaos-plugin": "0.38.0",
     "zod": "^4.3.6"
   },
   "overrides": {
-    "zod": "^4.3.6",
-    "@thecolony/sdk": "0.15.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
