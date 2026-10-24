@@ -5,6 +5,7 @@ import {
   type ProjectAgent,
 } from "@elizaos/core";
 import { character } from "./character.js";
+import { installContextCap } from "./context-cap.js";
 
 const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
   logger.info(
@@ -13,6 +14,8 @@ const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
   );
   // Proof-of-cognition challenge handling now lives in @thecolony/elizaos-plugin
   // (>= 0.38.0) — every ElizaOS Colony agent gets it, no per-deployment copy.
+  // 2026-10-24: cap the room history in reply prompts (see context-cap.ts).
+  installContextCap(runtime);
 };
 
 export const projectAgent: ProjectAgent = {
